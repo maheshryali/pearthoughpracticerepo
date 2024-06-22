@@ -56,7 +56,7 @@ resource "null_resource" "example" {
       "sudo apt-get install -y nodejs",
       "sudo npm install -g pm2",
       "cd /srv",
-      "git clone https://github.com/maheshryali/pearthoughpracticerepo.git",
+      "git clone https://github.com/PearlThoughts-DevOps-Internship/strapi.git",
       "git checkout mahesh-branch",
       "sudo chown -R ubuntu:ubuntu /srv/strapi",
       "sudo chmod -R 755 /srv/strapi",

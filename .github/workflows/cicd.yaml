@@ -1,9 +1,10 @@
-name: CI/CD pipeline for Strapi API
+name:  Deployment for Strapi API
 
 on:
   push:
     branches:
-      - main
+      - mahesh-branch
+
 
 jobs:
   deploy:
@@ -13,24 +14,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Set up AWS credentials
+      - name: Setting up AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
-          aws-region: us-west-2  
-
-      - name: Deploy application to EC2 server
-        env:
-          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.SSH_HOST }}
-          USER_NAME: ${{ secrets.USER_NAME }}
+          aws-access-key-id: ${{ secrets.MAHESHR_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.MAHESH_AWS_SECRET_KEY_ID }}
+          aws-region: us-west-2 
+      - name: Setting up SSH key
         run: |
-          echo "$PRIVATE_KEY" > private_key
-          chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} \
-            "cd /srv/strapi-api && \
-            git pull origin main && \
-            pm2 stop strapi || true && \
-            npm install && \
-            pm2 restart all"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MAHESHR_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Add SSH key to the agent
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.MAHESHR_PRIVATE_KEY }}     
+
+      - name:  Setting up terraform
+        uses: hashicorp/terraform-github-actions/init@v0.4.0
+      - name: Initialization
+        run: terraform init
+        working-directory: ./Terraform
+      - name: Apply the infrastructure
+        run: terraform apply -var-file "dev.tfvars" -auto-approve
+        working-directory: ./Terraform
